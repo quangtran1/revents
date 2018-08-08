@@ -74,7 +74,7 @@ class EventDashboard extends Component {
       isOpen: false
     });
   };
-  handleOpenEvent = (eventToOpen) => () => {
+  handleOpenEvent = eventToOpen => () => {
     this.setState({
       selectedEvent: eventToOpen,
       isOpen: true
@@ -93,12 +93,14 @@ class EventDashboard extends Component {
       isOpen: false
     });
   };
-  handleDeleteEvent = (eventId) => () => {
-    const updateEvents = this.state.events.filter(event => event.id != eventId );
+  handleDeleteEvent = eventId => () => {
+    const updateEvents = this.state.events.filter(
+      event => event.id !== eventId
+    );
     this.setState({
       events: updateEvents
-    })
-  }
+    });
+  };
   handleCreateEvent = newEvent => {
     newEvent.id = cuid();
     newEvent.hostPhotoURL = '/assets/user.png';
