@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Menu, Button, Container } from 'semantic-ui-react';
-import { NavLink, withRouter } from 'react-router-dom';
+import { Link, NavLink, withRouter } from 'react-router-dom';
 import SignedInMenu from '../Menus/SignedInMenu';
 import SignedOutMenu from '../Menus/SignedOutMenu';
 class NavBar extends Component {
@@ -35,6 +35,8 @@ class NavBar extends Component {
           {authenticated && (
             <Menu.Item>
               <Button
+                as={Link}
+                to="/createEvent"
                 floated="right"
                 positive
                 inverted
