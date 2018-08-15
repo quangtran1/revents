@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import EventListAttendee from './EventListAttendee';
 class EventListItem extends Component {
   render() {
-    const { event, onEventOpen, DeleteEvent } = this.props;
+    const { event, DeleteEvent } = this.props;
     return (
       <div>
         <Segment.Group>

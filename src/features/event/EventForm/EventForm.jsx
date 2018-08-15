@@ -1,3 +1,4 @@
+/*global google*/
 import React, { Component } from 'react';
 import { Segment, Form, Button, Grid, Header } from 'semantic-ui-react';
 import { connect } from 'react-redux';
@@ -6,14 +7,16 @@ import {
   composeValidators,
   combineValidators,
   isRequired,
-  hasLengthGreaterThan,
-  createValidator
+  hasLengthGreaterThan
 } from 'revalidate';
 import cuid from 'cuid';
+import Script from 'react-load-script';
+import { geocodeByAddress, getLatLng } from 'react-places-autocomplete';
 import { createEvent, updateEvent } from '../eventActions';
 import TextInput from '../../../app/common/form/TextInput';
 import TextArea from '../../../app/common/form/TextArea';
 import SelectInput from '../../../app/common/form/SelectInput';
+import PlaceInput from '../../../app/common/form/PlaceInput';
 const mapState = (state, ownProps) => {
   const eventId = ownProps.match.params.id;
   let event = {};
@@ -35,15 +38,6 @@ const category = [
 ];
 const actions = { createEvent, updateEvent };
 
-const isGreaterThan = n =>
-  createValidator(
-    message => value => {
-      if (value && Number(value) <= n) {
-        return message;
-      }
-    },
-    field => `${field} must be greater than ${n}`
-  );
 const validate = combineValidators({
   title: isRequired({ message: 'The event title is required' }),
   category: isRequired({ message: 'Please provide a category' }),
@@ -57,7 +51,40 @@ const validate = combineValidators({
   venue: isRequired('venue')
 });
 class EventForm extends Component {
+  state = {
+    cityLatLng: {},
+    venueLatLng: {},
+    scriptLoaded: false
+  };
+  handleScriptLoaded = () => {
+    this.setState({ scriptLoaded: true });
+  };
+  handleCitySelect = selectedCity => {
+    geocodeByAddress(selectedCity)
+      .then(results => getLatLng(results[0]))
+      .then(latlng => {
+        this.setState({
+          cityLatLng: latlng
+        });
+      })
+      .then(() => {
+        this.props.change('city', selectedCity);
+      });
+  };
+  handleVenueSelect = selectedVenue => {
+    geocodeByAddress(selectedVenue)
+      .then(results => getLatLng(results[0]))
+      .then(latlng => {
+        this.setState({
+          venueLatLng: latlng
+        });
+      })
+      .then(() => {
+        this.props.change('venue', selectedVenue);
+      });
+  };
   onFormSubmit = values => {
+    values.venueLatLng = this.state.venueLatLng;
     if (this.props.initialValues.id) {
       this.props.updateEvent(values);
       this.props.history.goBack();
@@ -76,6 +103,10 @@ class EventForm extends Component {
     const { invalid, submitting, pristine } = this.props;
     return (
       <Grid>
+        <Script
+          url="https://maps.googleapis.com/maps/api/js?key=AIzaSyBQLw90b1LJmr3NNLWrW5Fq_F7bOWLzCt0&libraries=places"
+          onLoad={this.handleScriptLoaded}
+        />
         <Grid.Column width={10}>
           <Segment>
             <Header sub color="teal" content="Event Details" />
@@ -105,14 +136,24 @@ class EventForm extends Component {
                 name="city"
                 type="text"
                 placeholder="Event City"
-                component={TextInput}
+                component={PlaceInput}
+                options={{ types: ['(cities)'] }}
+                onSelect={this.handleCitySelect}
               />
-              <Field
-                name="venue"
-                type="text"
-                placeholder="Event Venue"
-                component={TextInput}
-              />
+              {this.state.scriptLoaded && (
+                <Field
+                  name="venue"
+                  type="text"
+                  placeholder="Event Venue"
+                  component={PlaceInput}
+                  options={{
+                    location: new google.maps.LatLng(this.state.cityLatLng),
+                    radius: 1000,
+                    types: ['establishment']
+                  }}
+                  onSelect={this.handleVenueSelect}
+                />
+              )}
               <Field
                 name="date"
                 type="text"
